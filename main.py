@@ -10,7 +10,7 @@ import torch
 app = Flask(__name__)
 CORS(app)
 
-model = TransformerEncoder(ntoken=512,
+model = TransformerEncoder(ntoken=150,
                            em_dim=64,
                            nhead=8,
                            nhid=128,
@@ -18,8 +18,12 @@ model = TransformerEncoder(ntoken=512,
                            max_len=128,
                            dropout=0.2)
 
-model = torch.load("mint_ii_model_epoch_50.pth",
-                   map_location=torch.device("cpu"))
+model_path = "mint_ii_model_epoch_50.pth"
+trained = torch.load(model_path, map_location=torch.device("cpu"))
+state_dict = trained['model_state_dict']
+new_state_dict = {k.replace("module.", ""): v for k, v in state_dict.items()}
+model.load_state_dict(new_state_dict)
+
 model.eval()
 print("Model loaded successfully.")
 
