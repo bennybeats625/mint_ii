@@ -1,0 +1,63 @@
+from flask import Flask, request, send_file
+from flask_cors import CORS
+import os
+import mido
+from mido import Message, MidiFile, MidiTrack, bpm2tempo
+import numpy
+from model_functions import TransformerEncoder
+import torch
+
+app = Flask(__name__)
+CORS(app)
+
+model = TransformerEncoder(ntoken=512,
+                           em_dim=64,
+                           nhead=8,
+                           nhid=128,
+                           nlayers=8,
+                           max_len=128,
+                           dropout=0.2)
+
+model = torch.load("mint_ii_model_epoch_50.pth",
+                   map_location=torch.device("cpu"))
+model.eval()
+print("Model loaded successfully.")
+
+
+@app.route('/')
+def home():
+    return "MINTii backend is running."
+
+
+@app.route("/generate", methods=["POST"])
+def generate():
+    key = request.json.get("key", "C")
+    tempo = int(request.json.get("tempo", 120))
+
+    create_twinkle_midi("melody.mid", tempo)
+    return send_file("melody.mid", as_attachment=True)
+
+
+def create_twinkle_midi(filename, bpm):
+    mid = MidiFile()
+    track = MidiTrack()
+    mid.tracks.append(track)
+
+    # Set tempo
+    tempo = bpm2tempo(bpm)
+    track.append(Message('program_change', program=0, time=0))
+    track.append(mido.MetaMessage('set_tempo', tempo=tempo))
+
+    # Note values
+    notes = [60, 60, 67, 67, 69, 69, 67]  # C C G G A A G
+    durations = [480, 480, 480, 480, 480, 480, 960]  # last G is a half note
+
+    for note, dur in zip(notes, durations):
+        track.append(Message('note_on', note=note, velocity=64, time=0))
+        track.append(Message('note_off', note=note, velocity=64, time=dur))
+
+    mid.save(filename)
+
+
+if __name__ == '__main__':
+    app.run(host='0.0.0.0', port=int(os.environ.get("PORT", 5000)))
