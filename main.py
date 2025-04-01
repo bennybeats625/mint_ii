@@ -7,6 +7,8 @@ import numpy
 from model_functions import TransformerEncoder
 import torch
 
+toggle_twinkle = True
+
 app = Flask(__name__)
 CORS(app)
 
@@ -35,10 +37,17 @@ def home():
 
 @app.route("/generate", methods=["POST"])
 def generate():
+    global toggle_twinkle
+
     key = request.json.get("key", "C")
     tempo = int(request.json.get("tempo", 120))
 
-    create_twinkle_midi("melody.mid", tempo)
+    if toggle_twinkle:
+        create_twinkle_midi("melody.mid", tempo)
+    else:
+        create_twinkle_part2_midi("melody.mid", tempo)
+
+    toggle_twinkle = not toggle_twinkle
     return send_file("melody.mid", as_attachment=True)
 
 
@@ -61,6 +70,25 @@ def create_twinkle_midi(filename, bpm):
         track.append(Message('note_off', note=note, velocity=64, time=dur))
 
     mid.save(filename)
+
+def create_twinkle_part2_midi(filename, bpm):
+    mid = MidiFile()
+    track = MidiTrack()
+    mid.tracks.append(track)
+
+    tempo = bpm2tempo(bpm)
+    track.append(Message('program_change', program=0, time=0))
+    track.append(mido.MetaMessage('set_tempo', tempo=tempo))
+
+    notes = [65, 65, 64, 64, 62, 62, 60]  # F F E E D D C
+    durations = [480, 480, 480, 480, 480, 480, 960]
+
+    for note, dur in zip(notes, durations):
+        track.append(Message('note_on', note=note, velocity=64, time=0))
+        track.append(Message('note_off', note=note, velocity=64, time=dur))
+
+    mid.save(filename)
+
 
 
 if __name__ == '__main__':
