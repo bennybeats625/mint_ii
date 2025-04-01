@@ -3,3 +3,4 @@ flask-cors
 mido
 torch
 numpy
+gunicorn
