@@ -28,7 +28,7 @@ model = TransformerEncoder(
     dropout=0.2
 )
 
-model_path = "mint_ii_model_epoch_500.pth"
+model_path = "mint_ii_pop_melodies_500.pth"
 trained = torch.load(model_path, map_location=torch.device("cpu"))
 state_dict = trained['model_state_dict']
 new_state_dict = {k.replace("module.", ""): v for k, v in state_dict.items()}
