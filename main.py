@@ -10,7 +10,7 @@ import torch
 toggle_twinkle = True
 
 app = Flask(__name__)
-CORS(app)
+CORS(app, resources={r"/*": {"origins": "*"}}, supports_credentials=True)
 
 model = TransformerEncoder(ntoken=150,
                            em_dim=64,
