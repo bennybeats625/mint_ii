@@ -1,4 +1,4 @@
-from flask import Flask, request, send_file
+from flask import Flask, request, send_file, send_from_directory
 from flask_cors import CORS
 import os
 import torch
@@ -16,7 +16,7 @@ from mint_ii_functions import (
 )
 
 app = Flask(__name__)
-CORS(app, resources={r"/*": {"origins": "*"}})
+CORS(app, resources={r"/*": {"origins": "*"}}, supports_credentials=True)
 
 model = TransformerEncoder(
     ntoken=150,
@@ -148,6 +148,11 @@ def generate():
         return "Failed to generate", 500
 
     return send_file(output_path, as_attachment=True)
+
+
+@app.route("/melody.mid")
+def serve_midi_file():
+    return send_from_directory(".", "melody.mid", as_attachment=True)
   
 
 if __name__ == '__main__':
