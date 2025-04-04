@@ -16,7 +16,7 @@ from mint_ii_functions import (
 )
 
 app = Flask(__name__)
-CORS(app, resources={r"/*": {"origins": "*"}}, supports_credentials=True)
+CORS(app, resources={r"/*": {"origins": "*"}})
 
 model = TransformerEncoder(
     ntoken=150,
