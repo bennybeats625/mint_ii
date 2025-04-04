@@ -39,7 +39,7 @@ print("Model loaded successfully.")
 def get_random_seed(seed_folder="seeds", length=16):
     seed_files = [f for f in os.listdir(seed_folder) if f.endswith(".npy")]
     if not seed_files:
-        print("⚠No seed files found.")
+        print("No seed files found.")
         return []
     path = os.path.join(seed_folder, np.random.choice(seed_files))
     return np.load(path).astype(int).tolist()[:length]
