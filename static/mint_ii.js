@@ -2,7 +2,7 @@ let isLoaded = false;
 let part;
 
 async function loadMidi() {
-  const response = await fetch("https://mintii-music-generator.onrender.com/generate", {
+  const response = await fetch("/generate", {
     method: "POST",
     headers: {
       "Content-Type": "application/json",
@@ -55,7 +55,7 @@ document.getElementById("stop").addEventListener("click", () => {
 });
 
 document.getElementById("download").addEventListener("click", () => {
-  window.location.href = "https://mintii-music-generator.onrender.com/melody.mid";
+  window.location.href = "https://mint-ii.onrender.com/melody.mid";
 });
 
 document.getElementById("regenerate").addEventListener("click", async () => {
