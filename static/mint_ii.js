@@ -7,15 +7,11 @@ async function loadMidi() {
     headers: {
       "Content-Type": "application/json",
     },
-    body: JSON.stringify({
-      key: 0, // hardcoded for now—you can add dropdowns later
-      tempo: 120,
-    }),
+    body: JSON.stringify({ key: "0", tempo: 120 }),
   });
 
   const arrayBuffer = await response.arrayBuffer();
   const midi = new Midi(arrayBuffer);
-
   const synth = new Tone.PolySynth().toDestination();
 
   const events = midi.tracks[0].notes.map((note) => ({
@@ -26,53 +22,66 @@ async function loadMidi() {
   }));
 
   part = new Tone.Part((time, value) => {
-    synth.triggerAttackRelease(
-      value.note,
-      value.duration,
-      time,
-      value.velocity,
-    );
+    synth.triggerAttackRelease(value.note, value.duration, time, value.velocity);
   }, events).start(0);
 
   part.loop = true;
-  part.loopEnd = midi.duration;
+  // Force loop to exactly 8 bars (4 beats per bar), regardless of MIDI duration
+  const beatsPerBar = 4;
+  const bars = 8;
+  const bpm = midi.header.tempos[0]?.bpm || 120;
+    
+  const secondsPerBeat = 60 / bpm;
+  const loopLength = beatsPerBar * bars * secondsPerBeat;
+    
+  part.loopEnd = loopLength;
 
-  isLoaded = true;
-  document.getElementById("download").disabled = false;
+
   Tone.Transport.bpm.value = midi.header.tempos[0]?.bpm || 120;
+  isLoaded = true;
+
+  // Enable all buttons once MIDI is generated and ready to play
+  document.getElementById("playstop").disabled = false;
+  document.getElementById("download").disabled = false;
+
+  // Auto-start playback
+  Tone.Transport.start("+0.1");
+
+  // Set play/stop button to "Stop"
+  document.getElementById("playstop").innerText = "Stop";
 }
 
-document.getElementById("play").addEventListener("click", async () => {
-  if (!isLoaded) {
-    await loadMidi();
-  }
-  Tone.Transport.start("+0.1");
-});
-
-document.getElementById("stop").addEventListener("click", () => {
-  Tone.Transport.stop();
-  Tone.Transport.position = 0;
-});
-
-document.getElementById("download").addEventListener("click", () => {
-  window.location.href = "https://mint-ii.onrender.com/melody.mid";
-});
-
-document.getElementById("regenerate").addEventListener("click", async () => {
-  // Stop playback cleanly
+document.getElementById("generate").addEventListener("click", async () => {
+  // Stop any playback if playing
   Tone.Transport.stop();
   Tone.Transport.position = 0;
 
-  // Clear the old part (so we don't stack multiple loops)
   if (part) {
     part.dispose();
     part = null;
   }
 
-  // Reset load flag
   isLoaded = false;
 
-  // Fetch and play the new melody
   await loadMidi();
-  Tone.Transport.start("+0.1");
+
+  // Switch label to "Regenerate"
+  document.getElementById("generate").innerText = "Regenerate";
+});
+
+document.getElementById("playstop").addEventListener("click", () => {
+  if (!isLoaded) return;
+
+  if (Tone.Transport.state === "started") {
+    Tone.Transport.stop();
+    Tone.Transport.position = 0;
+    document.getElementById("playstop").innerText = "Play";
+  } else {
+    Tone.Transport.start("+0.1");
+    document.getElementById("playstop").innerText = "Stop";
+  }
+});
+
+document.getElementById("download").addEventListener("click", () => {
+  window.location.href = "/melody.mid";
 });
