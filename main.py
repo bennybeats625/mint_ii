@@ -143,14 +143,7 @@ def static_files(filename):
 
 @app.route("/generate", methods=["POST"])
 def generate():
-    key = int(request.json.get("key", 0))  # default to C
-    tempo = int(request.json.get("tempo", 120))
-
-    output_path, success = generate_melody(model, key, tempo, bars=8)
-    if not success:
-        return "Failed to generate", 500
-
-    return send_file(output_path, as_attachment=True)
+    return "OK", 200
 
 
 @app.route("/melody.mid")
