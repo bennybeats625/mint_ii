@@ -2,6 +2,8 @@ let isLoaded = false;
 let part;
 
 async function loadMidi() {
+  genBtn.innerText = "Loading...";
+
   const response = await fetch("/generate", {
     method: "POST",
     headers: {
@@ -14,7 +16,7 @@ async function loadMidi() {
   const midi = new Midi(arrayBuffer);
   const synth = new Tone.PolySynth().toDestination();
 
-  const events = midi.tracks[0].notes.map((note) => ({
+const events = (midi.tracks[0]?.notes || []).map((note) => ({
     time: note.time,
     note: note.name,
     duration: note.duration,
@@ -37,7 +39,7 @@ async function loadMidi() {
   part.loopEnd = loopLength;
 
 
-  Tone.Transport.bpm.value = midi.header.tempos[0]?.bpm || 120;
+  Tone.Transport.bpm.value = bpm;
   isLoaded = true;
 
   // Enable all buttons once MIDI is generated and ready to play
@@ -52,7 +54,16 @@ async function loadMidi() {
 }
 
 document.getElementById("generate").addEventListener("click", async () => {
-  // Stop any playback if playing
+  const genBtn = document.getElementById("generate");
+  const playBtn = document.getElementById("playstop");
+  const downloadBtn = document.getElementById("download");
+
+  // Disable all interaction
+  genBtn.disabled = true;
+  playBtn.disabled = true;
+  downloadBtn.disabled = true;
+
+  // Stop playback if playing
   Tone.Transport.stop();
   Tone.Transport.position = 0;
 
@@ -63,11 +74,16 @@ document.getElementById("generate").addEventListener("click", async () => {
 
   isLoaded = false;
 
-  await loadMidi();
+  await loadMidi(); // fetch + decode + build + start
 
-  // Switch label to "Regenerate"
-  document.getElementById("generate").innerText = "Regenerate";
+  // Enable interaction again
+  genBtn.innerText = "Regenerate";
+  genBtn.disabled = false;
+  playBtn.disabled = false;
+  downloadBtn.disabled = false;
 });
+
+
 
 document.getElementById("playstop").addEventListener("click", () => {
   if (!isLoaded) return;
