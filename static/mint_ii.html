@@ -2,16 +2,99 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8">
-  <link rel="icon" type="image/x-icon" href="favicon.ico">
-  <title>MINTii</title>
-</head>
-<body>
-  <h1>MINTii Music Generator</h1>
-    <button id="generate">Generate</button>       <!-- Will change to Regenerate -->
-    <button id="playstop" disabled>Stop</button> <!-- Starts disabled -->
-    <button id="download" disabled>Download MIDI</button>
+  <title>MINTii Music Generator</title>
+  <link rel="icon" href="/static/favicon.ico" type="image/x-icon">
+
+  <!-- Google Fonts -->
+  <link href="https://fonts.googleapis.com/css2?family=Jua&family=Quicksand:wght@700&display=swap" rel="stylesheet">
+
+  <!-- Tone.js + MIDI -->
   <script src="https://cdn.jsdelivr.net/npm/@tonejs/midi@2.0.27/build/Midi.min.js"></script>
   <script src="https://cdnjs.cloudflare.com/ajax/libs/tone/14.8.39/Tone.min.js"></script>
-  <script src="/static/mint_ii.js"></script>
-</body>
+<style>
+html, body {
+  margin: 0;
+  padding: 0;
+  background-color: #98F5D0;
+  color: #1A1A1A;
+  font-family: 'Quicksand', sans-serif;
+  font-weight: 700;
+  text-align: center;
+  height: 100vh;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  overflow: hidden;
+}
+
+.container {
+  background-color: #FAFAF4;
+  padding: 50px 60px 30px 60px;
+  border-radius: 16px;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+  box-sizing: border-box;
+  width: max-content;
+}
+
+h1 {
+  font-family: 'Jua', sans-serif;
+  font-size: 7.5em;
+  margin: 0 0 18px 0;
+  color: #1A1A1A;
+}
+
+.button-column {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+}
+
+.button-group {
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+  width: 260px;
+}
+
+button {
+  background-color: #FAFAF4;
+  color: #1A1A1A;
+  border: 2px solid #1A1A1A;
+  padding: 20px;
+  font-size: 2em;
+  border-radius: 12px;
+  cursor: pointer;
+  font-family: 'Quicksand', sans-serif;
+  font-weight: 700;
+  width: 100%;
+  box-sizing: border-box;
+  transition: background-color 0.2s ease, opacity 0.2s ease;
+}
+
+button:hover:not(:disabled) {
+  background-color: #ECECE4;
+}
+
+button:disabled {
+  opacity: 0.5;
+  cursor: default;
+  color: #1A1A1A;
+}
+
+</style>
+
+    </head>
+    <body>
+        <div class="container">
+          <h1>MINTii</h1>        
+            <div class="button-column">
+                <div class="button-group">
+                  <button id="generate">Generate</button>
+                  <button id="playstop" disabled>Stop</button>
+                  <button id="download" disabled>Download</button>
+                </div>
+            </div>
+        </div>
+      <script src="/static/mint_ii.js"></script>
+    </body>
 </html>
