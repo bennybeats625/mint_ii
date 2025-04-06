@@ -1,5 +1,4 @@
 from flask import Flask, request, send_file, send_from_directory
-from flask_cors import CORS
 import os
 import torch
 import numpy as np
@@ -16,8 +15,6 @@ from mint_ii_functions import (
 )
 
 app = Flask(__name__)
-CORS(app, resources={r"/*": {"origins": "*"}})
-
 
 model = TransformerEncoder(
     ntoken=150,
@@ -134,9 +131,14 @@ def generate_melody(model, key, tempo, bars=8, k=10, seed_folder="seeds"):
     decoder(tempo, key, final_tokens, output_path)
     return output_path, True
 
-@app.route('/')
-def home():
-    return "MINTii backend is running."
+@app.route("/")
+def index():
+    return send_from_directory("static", "mint_ii.html")
+
+
+@app.route("/static/<path:filename>")
+def static_files(filename):
+    return send_from_directory("static", filename)
 
 
 @app.route("/generate", methods=["POST"])
