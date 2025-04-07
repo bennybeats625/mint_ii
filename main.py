@@ -99,13 +99,20 @@ def trim_to_n_bars(tokens, bars):
     return trimmed
 
 def generate_melody(model, key, tempo, bars=8, k=10, seed_folder="seeds"):
+    print("Starting melody generation...")
     seed = get_random_seed(seed_folder)
     if not seed:
+        print("ERROR: No seed returned.")
         return None, False
 
+    print(f"Seed loaded: {seed[:8]}... (length={len(seed)})")
     current_tokens = seed.copy()
 
+    loop_count = 0
     while True:
+        loop_count += 1
+        print(f"--- Generation loop #{loop_count} ---")
+
         generated = generate_music(
             model=model,
             seed_sequence=current_tokens,
@@ -114,22 +121,47 @@ def generate_melody(model, key, tempo, bars=8, k=10, seed_folder="seeds"):
             k=k
         )
 
-        expanded = beat_unmapping(generated[2])
+        if not generated or not isinstance(generated, tuple) or len(generated) < 3:
+            print("ERROR: Unexpected format from generate_music()")
+            return None, False
+
+        print("Generated tokens:", generated[2][:8], "...")
+
+        try:
+            expanded = beat_unmapping(generated[2])
+            print(f"Expanded tokens length: {len(expanded)}")
+        except Exception as e:
+            print("ERROR in beat_unmapping:", e)
+            return None, False
+
         trimmed_start = trim_leading_empty_beats(expanded)
+        print(f"Trimmed start length: {len(trimmed_start)}")
+
         total_beats = sum(1 for t in trimmed_start if t == BEAT_CNT_OFFSET)
+        print(f"Detected beats: {total_beats}")
 
         if total_beats >= bars * 4:
             final_tokens = trim_to_n_bars(trimmed_start, bars)
+            print(f"Final tokens length: {len(final_tokens)}")
             break
 
+        print("Sequence too short, generating more...")
         current_tokens = trimmed_start
 
     output_path = "melody.mid"
     if final_tokens[-1] != TRACK_END_TOKEN:
         final_tokens.append(TRACK_END_TOKEN)
+        print("Appended TRACK_END_TOKEN")
 
-    decoder(tempo, key, final_tokens, output_path)
+    try:
+        decoder(tempo, key, final_tokens, output_path)
+        print("MIDI successfully decoded and saved.")
+    except Exception as e:
+        print("ERROR in decoder:", e)
+        return None, False
+
     return output_path, True
+
 
 @app.route("/")
 def index():
@@ -143,7 +175,22 @@ def static_files(filename):
 
 @app.route("/generate", methods=["POST"])
 def generate():
-    return "OK", 200
+    try:
+        key = int(request.json.get("key", 0))
+        tempo = int(request.json.get("tempo", 120))
+        print(f"Received generate request: key={key}, tempo={tempo}")
+
+        output_path, success = generate_melody(model, key, tempo, bars=8)
+        if not success:
+            print("Generation failed — no success flag.")
+            return "Failed to generate", 500
+
+        print(f"Generated file at {output_path}")
+        return send_file(output_path, as_attachment=True)
+
+    except Exception as e:
+        print(f"Error in /generate: {e}")
+        return "Internal Server Error", 500
 
 
 @app.route("/melody.mid")
