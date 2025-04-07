@@ -1,6 +1,11 @@
 let isLoaded = false;
 let part;
 
+const genBtn = document.getElementById("generate");
+const playBtn = document.getElementById("playstop");
+const downloadBtn = document.getElementById("download");
+
+
 async function loadMidi() {
   genBtn.innerText = "Loading...";
 
@@ -54,9 +59,6 @@ const events = (midi.tracks[0]?.notes || []).map((note) => ({
 }
 
 document.getElementById("generate").addEventListener("click", async () => {
-  const genBtn = document.getElementById("generate");
-  const playBtn = document.getElementById("playstop");
-  const downloadBtn = document.getElementById("download");
 
   // Disable all interaction
   genBtn.disabled = true;
